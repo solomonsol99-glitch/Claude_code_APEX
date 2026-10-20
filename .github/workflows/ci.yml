@@ -1,0 +1,64 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mre_owner
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: mre_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U mre_owner -d mre_test"
+          --health-interval 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql+psycopg://mre_owner:ci-only-password@localhost:5432/mre_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with: { version: "0.11.32" }
+      - run: uv python install 3.12
+      - run: uv sync --all-packages --frozen
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Typecheck (strict)
+        run: make typecheck
+      - name: Tests (live tests excluded by default)
+        run: uv run pytest --cov=packages --cov-report=term-missing --cov-fail-under=85
+      - name: Dependency audit
+        run: uvx pip-audit --strict --progress-spinner off -r <(uv export --frozen --no-dev --no-hashes --all-packages --no-emit-workspace)
+
+  secrets:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  engine-image:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned engine image
+        run: docker build -t coreset/mirofish-engine:ci engines/mirofish
+      - name: Scan image (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: coreset/mirofish-engine:ci
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"

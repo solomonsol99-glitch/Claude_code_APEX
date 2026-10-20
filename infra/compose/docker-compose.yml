@@ -1,0 +1,121 @@
+# Coreset MRE local stack (blueprint §2.6, step 1).
+# Dev only: Vault runs in dev mode, credentials come from .env (copy .env.example; no real values in Git).
+name: coreset-mre
+
+x-hardened: &hardened
+  read_only: true
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: ["ALL"]
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: ${REGISTRY_PREFIX:-}postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_SUPERUSER:-mre_owner}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set in .env}
+      POSTGRES_DB: mre
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    ports: ["127.0.0.1:5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d mre"]
+      interval: 5s
+      retries: 20
+    networks: [data-net]
+    restart: unless-stopped
+
+  redis:
+    image: ${REGISTRY_PREFIX:-}redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--requirepass", "${REDIS_PASSWORD:?set in .env}"]
+    ports: ["127.0.0.1:6379:6379"]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $${REDIS_PASSWORD} ping | grep PONG"]
+      interval: 5s
+      retries: 20
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks: [data-net]
+    restart: unless-stopped
+
+  minio:
+    image: ${REGISTRY_PREFIX:-}minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set in .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set in .env}
+    volumes: ["miniodata:/data"]
+    ports: ["127.0.0.1:9000:9000", "127.0.0.1:9001:9001"]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      retries: 20
+    networks: [data-net]
+    restart: unless-stopped
+
+  vault:
+    image: ${REGISTRY_PREFIX:-}hashicorp/vault:1.18
+    command: ["server", "-dev", "-dev-listen-address=0.0.0.0:8200"]
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN:?set in .env}
+    cap_add: ["IPC_LOCK"]
+    ports: ["127.0.0.1:8200:8200"]
+    networks: [data-net]
+    restart: unless-stopped
+
+  otel-collector:
+    image: ${REGISTRY_PREFIX:-}otel/opentelemetry-collector-contrib:0.111.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes: ["./otel-collector.yaml:/etc/otelcol/config.yaml:ro"]
+    ports: ["127.0.0.1:4317:4317", "127.0.0.1:4318:4318"]
+    networks: [data-net, engine-net]
+    restart: unless-stopped
+
+  # ---- Engine zone (AGPL). One run per instance; reachable only on engine-net. ----
+  engine-1:
+    <<: *hardened
+    profiles: ["engine"]
+    image: coreset/mirofish-engine:${ENGINE_TAG:-dev}
+    labels: { mre.engine: "true" }
+    tmpfs:
+      - /opt/mirofish/backend/uploads:size=2g,uid=10001,gid=10001,mode=0700
+      - /tmp:size=256m,uid=10001,gid=10001
+    environment:
+      # Real values are injected per run by the worker from Vault. These are dev placeholders.
+      LLM_BASE_URL: ${ENGINE_LLM_BASE_URL:-http://llm-gateway:4000/v1}
+      LLM_API_KEY: ${ENGINE_LLM_API_KEY:-dev-placeholder}
+      LLM_MODEL_NAME: ${ENGINE_LLM_MODEL:-sim-primary}
+      ZEP_API_KEY: ${ENGINE_ZEP_API_KEY:-dev-placeholder}
+      SECRET_KEY: ${ENGINE_SECRET_KEY:?set a random value in .env}
+      FLASK_DEBUG: "false"
+      HTTPS_PROXY: http://egress-proxy:3128
+      HTTP_PROXY: http://egress-proxy:3128
+      NO_PROXY: llm-gateway,fake-llm,otel-collector
+    deploy:
+      resources:
+        limits: { cpus: "2", memory: 4g }
+    networks: [engine-net]
+
+  # Phase 0 only: OpenAI-compatible fake so the engine can be driven with no spend.
+  fake-llm:
+    profiles: ["spike"]
+    build:
+      context: ../../tests/fakes/fake_llm
+      args: { REGISTRY_PREFIX: "${REGISTRY_PREFIX:-}" }
+    read_only: true
+    tmpfs: ["/tmp:size=64m,uid=10001,gid=10001"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    networks:
+      engine-net:
+        aliases: [llm-gateway]
+
+volumes:
+  pgdata: {}
+  miniodata: {}
+
+networks:
+  data-net: {}
+  # No default route: the engine can reach only services attached to this network
+  # (LLM gateway, egress proxy, OTel). §2.4.4, §3.7.
+  engine-net:
+    internal: true

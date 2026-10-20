@@ -1,0 +1,18 @@
+[project]
+name = "mre-security"
+version = "0.1.0"
+description = "PII scrubbing, injection detection, forbidden-purpose filter, report-language lint."
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mre_security"]
+
+[tool.uv.sources]
+mre-core = { workspace = true }
+mre-net = { workspace = true }
+mre-security = { workspace = true }

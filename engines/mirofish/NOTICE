@@ -1,0 +1,16 @@
+Coreset MiroFish engine image
+
+This image contains MiroFish (https://github.com/666ghj/MiroFish), Copyright (c) the
+MiroFish authors, licensed under the GNU Affero General Public License v3.0. The full
+license text is shipped in this image at /opt/mirofish/LICENSE, taken unmodified from
+the upstream repository at the pinned commit.
+
+Pinned upstream commit: 7657031ac01184afe2cb220f5ee3545573b5e843
+Coreset modifications: the files in engines/mirofish/patches/ (none at this version).
+
+Bundled third-party components keep their own licenses and notices, including
+camel-oasis and camel-ai (Apache-2.0) and PyMuPDF (AGPL-3.0), installed from the
+upstream lockfile (backend/uv.lock).
+
+Coreset proprietary code is NOT part of this image. It talks to the engine only over
+HTTP using a documented schema.

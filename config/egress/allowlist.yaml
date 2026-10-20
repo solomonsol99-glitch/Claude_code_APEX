@@ -1,0 +1,12 @@
+# Egress allowlist (blueprint §3.7). Changes need Peter's approval.
+engine:
+  # Engine containers may reach only these hosts through egress-proxy.
+  # [ASSUMPTION A5] Zep Cloud hostnames are pinned after the Phase 0 egress run.
+  allow: []
+  candidate_from_sdk_default: ["api.getzep.com"]   # not active until confirmed in Phase 0
+llm_gateway:
+  # Provider API hosts, filled in when providers are chosen (A8).
+  allow: []
+seedbuilder:
+  # Customer domains are pushed per job at runtime; nothing static.
+  allow: []

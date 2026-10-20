@@ -1,0 +1,8 @@
+Copyright (c) 2026 Coreset. All rights reserved.
+
+This repository is proprietary and confidential, EXCEPT the contents of
+engines/mirofish/, which builds third-party software (MiroFish) licensed under the
+GNU Affero General Public License v3.0. See engines/mirofish/NOTICE.
+
+No license is granted to use, copy, modify or distribute the proprietary parts of this
+repository without written permission from Coreset.
