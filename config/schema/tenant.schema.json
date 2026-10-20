@@ -1,0 +1,1178 @@
+{
+  "$defs": {
+    "ApiKeys": {
+      "additionalProperties": false,
+      "properties": {
+        "default_ttl_days": {
+          "maximum": 365,
+          "minimum": 1,
+          "title": "Default Ttl Days",
+          "type": "integer"
+        },
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "ip_allowlist": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Ip Allowlist",
+          "type": "array"
+        },
+        "max_active_keys": {
+          "maximum": 50,
+          "minimum": 0,
+          "title": "Max Active Keys",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "max_active_keys",
+        "default_ttl_days"
+      ],
+      "title": "ApiKeys",
+      "type": "object"
+    },
+    "Auth": {
+      "additionalProperties": false,
+      "properties": {
+        "api_keys": {
+          "$ref": "#/$defs/ApiKeys"
+        },
+        "oidc": {
+          "$ref": "#/$defs/OIDC"
+        },
+        "roles_default": {
+          "$ref": "#/$defs/TenantRole"
+        }
+      },
+      "required": [
+        "oidc",
+        "api_keys",
+        "roles_default"
+      ],
+      "title": "Auth",
+      "type": "object"
+    },
+    "Baseline": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "route": {
+          "minLength": 1,
+          "title": "Route",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "route"
+      ],
+      "title": "Baseline",
+      "type": "object"
+    },
+    "Branding": {
+      "additionalProperties": false,
+      "properties": {
+        "brand_name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Brand Name",
+          "type": "string"
+        },
+        "colors": {
+          "$ref": "#/$defs/Colors"
+        },
+        "disclaimer_addendum": {
+          "default": "",
+          "maxLength": 4000,
+          "title": "Disclaimer Addendum",
+          "type": "string"
+        },
+        "fonts": {
+          "$ref": "#/$defs/Fonts"
+        },
+        "footer_text": {
+          "maxLength": 200,
+          "title": "Footer Text",
+          "type": "string"
+        },
+        "formats": {
+          "items": {
+            "enum": [
+              "docx",
+              "pdf"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Formats",
+          "type": "array"
+        },
+        "locale": {
+          "pattern": "^[a-z]{2}-[A-Z]{2}$",
+          "title": "Locale",
+          "type": "string"
+        },
+        "logo_uri": {
+          "pattern": "^s3://",
+          "title": "Logo Uri",
+          "type": "string"
+        },
+        "pdf_archival": {
+          "title": "Pdf Archival",
+          "type": "boolean"
+        },
+        "report_title": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Report Title",
+          "type": "string"
+        },
+        "show_powered_by_coreset": {
+          "title": "Show Powered By Coreset",
+          "type": "boolean"
+        },
+        "white_label": {
+          "title": "White Label",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "white_label",
+        "brand_name",
+        "show_powered_by_coreset",
+        "logo_uri",
+        "colors",
+        "fonts",
+        "report_title",
+        "footer_text",
+        "locale",
+        "formats",
+        "pdf_archival"
+      ],
+      "title": "Branding",
+      "type": "object"
+    },
+    "Calibration": {
+      "additionalProperties": false,
+      "properties": {
+        "category_pooling": {
+          "title": "Category Pooling",
+          "type": "boolean"
+        },
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "min_outcomes": {
+          "maximum": 1000,
+          "minimum": 5,
+          "title": "Min Outcomes",
+          "type": "integer"
+        },
+        "share_track_record_in_reports": {
+          "title": "Share Track Record In Reports",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "min_outcomes",
+        "share_track_record_in_reports",
+        "category_pooling"
+      ],
+      "title": "Calibration",
+      "type": "object"
+    },
+    "Colors": {
+      "additionalProperties": false,
+      "properties": {
+        "accent": {
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "title": "Accent",
+          "type": "string"
+        },
+        "primary": {
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "title": "Primary",
+          "type": "string"
+        },
+        "secondary": {
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "title": "Secondary",
+          "type": "string"
+        },
+        "text": {
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "primary",
+        "secondary",
+        "accent",
+        "text"
+      ],
+      "title": "Colors",
+      "type": "object"
+    },
+    "Concurrency": {
+      "additionalProperties": false,
+      "properties": {
+        "max_concurrent_runs": {
+          "minimum": 1,
+          "title": "Max Concurrent Runs",
+          "type": "integer"
+        },
+        "max_running_jobs": {
+          "minimum": 1,
+          "title": "Max Running Jobs",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_running_jobs",
+        "max_concurrent_runs"
+      ],
+      "title": "Concurrency",
+      "type": "object"
+    },
+    "Contacts": {
+      "additionalProperties": false,
+      "properties": {
+        "admin_email": {
+          "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+          "title": "Admin Email",
+          "type": "string"
+        }
+      },
+      "required": [
+        "admin_email"
+      ],
+      "title": "Contacts",
+      "type": "object"
+    },
+    "Contract": {
+      "additionalProperties": false,
+      "properties": {
+        "agreement_ref": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Agreement Ref",
+          "type": "string"
+        },
+        "forbidden_uses_acknowledged": {
+          "const": true,
+          "title": "Forbidden Uses Acknowledged",
+          "type": "boolean"
+        },
+        "permitted_uses": {
+          "items": {
+            "$ref": "#/$defs/PermittedUse"
+          },
+          "minItems": 1,
+          "title": "Permitted Uses",
+          "type": "array"
+        }
+      },
+      "required": [
+        "permitted_uses",
+        "forbidden_uses_acknowledged",
+        "agreement_ref"
+      ],
+      "title": "Contract",
+      "type": "object"
+    },
+    "Cost": {
+      "additionalProperties": false,
+      "properties": {
+        "monthly_usd_cap": {
+          "exclusiveMinimum": 0,
+          "title": "Monthly Usd Cap",
+          "type": "number"
+        },
+        "per_job_usd_cap": {
+          "exclusiveMinimum": 0,
+          "title": "Per Job Usd Cap",
+          "type": "number"
+        },
+        "require_admin_approval_above_usd": {
+          "minimum": 0,
+          "title": "Require Admin Approval Above Usd",
+          "type": "number"
+        },
+        "zep_monthly_ops_cap": {
+          "minimum": 0,
+          "title": "Zep Monthly Ops Cap",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "per_job_usd_cap",
+        "monthly_usd_cap",
+        "require_admin_approval_above_usd",
+        "zep_monthly_ops_cap"
+      ],
+      "title": "Cost",
+      "type": "object"
+    },
+    "Ensemble": {
+      "additionalProperties": false,
+      "properties": {
+        "min_successful_runs": {
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Min Successful Runs",
+          "type": "integer"
+        },
+        "model_families": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Model Families",
+          "type": "array"
+        },
+        "random_seed_base": {
+          "minimum": 0,
+          "title": "Random Seed Base",
+          "type": "integer"
+        },
+        "runs_per_arm": {
+          "maximum": 20,
+          "minimum": 1,
+          "title": "Runs Per Arm",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "runs_per_arm",
+        "min_successful_runs",
+        "model_families",
+        "random_seed_base"
+      ],
+      "title": "Ensemble",
+      "type": "object"
+    },
+    "Features": {
+      "additionalProperties": false,
+      "properties": {
+        "export_csv": {
+          "default": true,
+          "title": "Export Csv",
+          "type": "boolean"
+        },
+        "portal_persona_chat": {
+          "default": false,
+          "title": "Portal Persona Chat",
+          "type": "boolean"
+        }
+      },
+      "title": "Features",
+      "type": "object"
+    },
+    "Fonts": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Body",
+          "type": "string"
+        },
+        "heading": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Heading",
+          "type": "string"
+        }
+      },
+      "required": [
+        "heading",
+        "body"
+      ],
+      "title": "Fonts",
+      "type": "object"
+    },
+    "Intake": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed_categories": {
+          "items": {
+            "pattern": "^[a-z0-9_]+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Allowed Categories",
+          "type": "array"
+        },
+        "max_alt_price_points": {
+          "maximum": 5,
+          "minimum": 0,
+          "title": "Max Alt Price Points",
+          "type": "integer"
+        },
+        "max_copy_variants": {
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Max Copy Variants",
+          "type": "integer"
+        },
+        "max_upload_mb": {
+          "maximum": 20,
+          "minimum": 0,
+          "title": "Max Upload Mb",
+          "type": "integer"
+        },
+        "scraping": {
+          "$ref": "#/$defs/Scraping"
+        }
+      },
+      "required": [
+        "allowed_categories",
+        "max_copy_variants",
+        "max_alt_price_points",
+        "max_upload_mb",
+        "scraping"
+      ],
+      "title": "Intake",
+      "type": "object"
+    },
+    "Interviews": {
+      "additionalProperties": false,
+      "properties": {
+        "custom_questions_max": {
+          "maximum": 5,
+          "minimum": 0,
+          "title": "Custom Questions Max",
+          "type": "integer"
+        },
+        "price_probes": {
+          "title": "Price Probes",
+          "type": "boolean"
+        },
+        "van_westendorp": {
+          "title": "Van Westendorp",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "price_probes",
+        "van_westendorp",
+        "custom_questions_max"
+      ],
+      "title": "Interviews",
+      "type": "object"
+    },
+    "LLM": {
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "enum": [
+            "third_party_allowed",
+            "self_hosted_only"
+          ],
+          "title": "Policy",
+          "type": "string"
+        },
+        "provider_allowlist": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Provider Allowlist",
+          "type": "array"
+        },
+        "routes": {
+          "$ref": "#/$defs/LLMRoutes"
+        },
+        "store_prompt_text": {
+          "title": "Store Prompt Text",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "policy",
+        "routes",
+        "store_prompt_text"
+      ],
+      "title": "LLM",
+      "type": "object"
+    },
+    "LLMRoutes": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Analysis",
+          "type": "array"
+        },
+        "simulation": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Simulation",
+          "type": "array"
+        }
+      },
+      "required": [
+        "simulation",
+        "analysis"
+      ],
+      "title": "LLMRoutes",
+      "type": "object"
+    },
+    "Limits": {
+      "additionalProperties": false,
+      "properties": {
+        "concurrency": {
+          "$ref": "#/$defs/Concurrency"
+        },
+        "cost": {
+          "$ref": "#/$defs/Cost"
+        },
+        "rate": {
+          "$ref": "#/$defs/RateLimits"
+        }
+      },
+      "required": [
+        "rate",
+        "concurrency",
+        "cost"
+      ],
+      "title": "Limits",
+      "type": "object"
+    },
+    "Market": {
+      "additionalProperties": false,
+      "properties": {
+        "age_bands": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Age Bands",
+          "type": "array"
+        },
+        "country": {
+          "pattern": "^[A-Z]{2}$",
+          "title": "Country",
+          "type": "string"
+        },
+        "income_bands": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Income Bands",
+          "type": "array"
+        },
+        "regions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Regions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "country"
+      ],
+      "title": "Market",
+      "type": "object"
+    },
+    "Memory": {
+      "additionalProperties": false,
+      "properties": {
+        "api_key_ref": {
+          "pattern": "^vault://[A-Za-z0-9_\\-./]+(#[A-Za-z0-9_\\-.]+)?$",
+          "title": "Api Key Ref",
+          "type": "string"
+        },
+        "backend": {
+          "const": "zep_cloud",
+          "title": "Backend",
+          "type": "string"
+        },
+        "delete_after_run": {
+          "const": true,
+          "title": "Delete After Run",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "backend",
+        "api_key_ref",
+        "delete_after_run"
+      ],
+      "title": "Memory",
+      "type": "object"
+    },
+    "NotificationChannel": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "webhook",
+            "email",
+            "slack"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "url_ref": {
+          "pattern": "^vault://[A-Za-z0-9_\\-./]+(#[A-Za-z0-9_\\-.]+)?$",
+          "title": "Url Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "url_ref"
+      ],
+      "title": "NotificationChannel",
+      "type": "object"
+    },
+    "Notifications": {
+      "additionalProperties": false,
+      "properties": {
+        "channels": {
+          "items": {
+            "$ref": "#/$defs/NotificationChannel"
+          },
+          "title": "Channels",
+          "type": "array"
+        },
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        }
+      },
+      "title": "Notifications",
+      "type": "object"
+    },
+    "OIDC": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed_email_domains": {
+          "items": {
+            "maxLength": 253,
+            "pattern": "^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$",
+            "type": "string"
+          },
+          "title": "Allowed Email Domains",
+          "type": "array"
+        },
+        "client_id_ref": {
+          "pattern": "^vault://[A-Za-z0-9_\\-./]+(#[A-Za-z0-9_\\-.]+)?$",
+          "title": "Client Id Ref",
+          "type": "string"
+        },
+        "issuer": {
+          "pattern": "^https://",
+          "title": "Issuer",
+          "type": "string"
+        },
+        "require_mfa_for_admins": {
+          "const": true,
+          "title": "Require Mfa For Admins",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "issuer",
+        "client_id_ref",
+        "require_mfa_for_admins"
+      ],
+      "title": "OIDC",
+      "type": "object"
+    },
+    "PanelSize": {
+      "additionalProperties": false,
+      "properties": {
+        "max": {
+          "maximum": 500,
+          "minimum": 20,
+          "title": "Max",
+          "type": "integer"
+        },
+        "min": {
+          "maximum": 500,
+          "minimum": 20,
+          "title": "Min",
+          "type": "integer"
+        },
+        "target": {
+          "maximum": 500,
+          "minimum": 20,
+          "title": "Target",
+          "type": "integer"
+        },
+        "tolerance": {
+          "exclusiveMinimum": 0,
+          "maximum": 0.25,
+          "title": "Tolerance",
+          "type": "number"
+        }
+      },
+      "required": [
+        "target",
+        "min",
+        "max",
+        "tolerance"
+      ],
+      "title": "PanelSize",
+      "type": "object"
+    },
+    "PermittedUse": {
+      "enum": [
+        "market_research",
+        "messaging_pretest",
+        "pricing_research"
+      ],
+      "title": "PermittedUse",
+      "type": "string"
+    },
+    "Personas": {
+      "additionalProperties": false,
+      "properties": {
+        "cohort_entitlement": {
+          "title": "Cohort Entitlement",
+          "type": "boolean"
+        },
+        "default_market": {
+          "$ref": "#/$defs/Market"
+        },
+        "marginal_tolerance_pp": {
+          "exclusiveMinimum": 0,
+          "maximum": 10,
+          "title": "Marginal Tolerance Pp",
+          "type": "number"
+        },
+        "mode": {
+          "enum": [
+            "synthetic",
+            "cohort"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "panel_size": {
+          "$ref": "#/$defs/PanelSize"
+        },
+        "segments": {
+          "$ref": "#/$defs/Segments"
+        }
+      },
+      "required": [
+        "mode",
+        "cohort_entitlement",
+        "default_market",
+        "segments",
+        "panel_size",
+        "marginal_tolerance_pp"
+      ],
+      "title": "Personas",
+      "type": "object"
+    },
+    "RateLimits": {
+      "additionalProperties": false,
+      "properties": {
+        "jobs_per_hour": {
+          "minimum": 1,
+          "title": "Jobs Per Hour",
+          "type": "integer"
+        },
+        "reads_per_min": {
+          "minimum": 1,
+          "title": "Reads Per Min",
+          "type": "integer"
+        },
+        "writes_per_min": {
+          "minimum": 1,
+          "title": "Writes Per Min",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "reads_per_min",
+        "writes_per_min",
+        "jobs_per_hour"
+      ],
+      "title": "RateLimits",
+      "type": "object"
+    },
+    "RetentionDays": {
+      "additionalProperties": false,
+      "properties": {
+        "intake": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Intake"
+        },
+        "outcomes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Outcomes"
+        },
+        "raw_scrape": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Raw Scrape"
+        },
+        "reports": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reports"
+        },
+        "run_artifacts": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Run Artifacts"
+        }
+      },
+      "required": [
+        "raw_scrape",
+        "run_artifacts",
+        "reports",
+        "intake",
+        "outcomes"
+      ],
+      "title": "RetentionDays",
+      "type": "object"
+    },
+    "Review": {
+      "additionalProperties": false,
+      "properties": {
+        "auto_rerun_budget_fraction": {
+          "maximum": 0.5,
+          "minimum": 0,
+          "title": "Auto Rerun Budget Fraction",
+          "type": "number"
+        },
+        "require_analyst": {
+          "title": "Require Analyst",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "require_analyst",
+        "auto_rerun_budget_fraction"
+      ],
+      "title": "Review",
+      "type": "object"
+    },
+    "Scraping": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed_domains": {
+          "items": {
+            "maxLength": 253,
+            "pattern": "^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$",
+            "type": "string"
+          },
+          "title": "Allowed Domains",
+          "type": "array"
+        },
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "exclude_paths": {
+          "items": {
+            "pattern": "^/",
+            "type": "string"
+          },
+          "title": "Exclude Paths",
+          "type": "array"
+        },
+        "max_pages": {
+          "maximum": 25,
+          "minimum": 1,
+          "title": "Max Pages",
+          "type": "integer"
+        },
+        "use_headless_browser": {
+          "title": "Use Headless Browser",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "max_pages",
+        "use_headless_browser"
+      ],
+      "title": "Scraping",
+      "type": "object"
+    },
+    "Segments": {
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "maximum": 12,
+          "minimum": 3,
+          "title": "Count",
+          "type": "integer"
+        },
+        "min_cards_per_segment": {
+          "maximum": 50,
+          "minimum": 1,
+          "title": "Min Cards Per Segment",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "count",
+        "min_cards_per_segment"
+      ],
+      "title": "Segments",
+      "type": "object"
+    },
+    "Simulation": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline": {
+          "$ref": "#/$defs/Baseline"
+        },
+        "enable_graph_memory_update": {
+          "title": "Enable Graph Memory Update",
+          "type": "boolean"
+        },
+        "engine": {
+          "enum": [
+            "mirofish",
+            "baseline",
+            "mock"
+          ],
+          "title": "Engine",
+          "type": "string"
+        },
+        "engine_version": {
+          "minLength": 1,
+          "title": "Engine Version",
+          "type": "string"
+        },
+        "ensemble": {
+          "$ref": "#/$defs/Ensemble"
+        },
+        "interviews": {
+          "$ref": "#/$defs/Interviews"
+        },
+        "max_rounds": {
+          "maximum": 200,
+          "minimum": 1,
+          "title": "Max Rounds",
+          "type": "integer"
+        },
+        "platforms": {
+          "items": {
+            "enum": [
+              "twitter",
+              "reddit"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Platforms",
+          "type": "array"
+        }
+      },
+      "required": [
+        "engine",
+        "engine_version",
+        "platforms",
+        "max_rounds",
+        "enable_graph_memory_update",
+        "ensemble",
+        "baseline",
+        "interviews"
+      ],
+      "title": "Simulation",
+      "type": "object"
+    },
+    "TenantInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "contacts": {
+          "$ref": "#/$defs/Contacts"
+        },
+        "contract": {
+          "$ref": "#/$defs/Contract"
+        },
+        "data_region": {
+          "enum": [
+            "us",
+            "eu",
+            "uk",
+            "ca",
+            "au"
+          ],
+          "title": "Data Region",
+          "type": "string"
+        },
+        "display_name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Display Name",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "slug": {
+          "pattern": "^[a-z0-9][a-z0-9-]{1,62}$",
+          "title": "Slug",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/TenantStatus"
+        }
+      },
+      "required": [
+        "id",
+        "slug",
+        "display_name",
+        "status",
+        "contract",
+        "data_region",
+        "contacts"
+      ],
+      "title": "TenantInfo",
+      "type": "object"
+    },
+    "TenantRole": {
+      "enum": [
+        "tenant_viewer",
+        "tenant_member",
+        "tenant_admin"
+      ],
+      "title": "TenantRole",
+      "type": "string"
+    },
+    "TenantStatus": {
+      "enum": [
+        "active",
+        "suspended",
+        "offboarding"
+      ],
+      "title": "TenantStatus",
+      "type": "string"
+    }
+  },
+  "$id": "https://coreset.example/mre/schema/tenant.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Root of ``config/tenants/<slug>.yaml``.",
+  "properties": {
+    "auth": {
+      "$ref": "#/$defs/Auth"
+    },
+    "branding": {
+      "$ref": "#/$defs/Branding"
+    },
+    "calibration": {
+      "$ref": "#/$defs/Calibration"
+    },
+    "features": {
+      "$ref": "#/$defs/Features"
+    },
+    "intake": {
+      "$ref": "#/$defs/Intake"
+    },
+    "limits": {
+      "$ref": "#/$defs/Limits"
+    },
+    "llm": {
+      "$ref": "#/$defs/LLM"
+    },
+    "memory": {
+      "$ref": "#/$defs/Memory"
+    },
+    "notifications": {
+      "$ref": "#/$defs/Notifications"
+    },
+    "personas": {
+      "$ref": "#/$defs/Personas"
+    },
+    "retention_days": {
+      "$ref": "#/$defs/RetentionDays"
+    },
+    "review": {
+      "$ref": "#/$defs/Review"
+    },
+    "schema_version": {
+      "const": 1,
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "simulation": {
+      "$ref": "#/$defs/Simulation"
+    },
+    "tenant": {
+      "$ref": "#/$defs/TenantInfo"
+    }
+  },
+  "required": [
+    "schema_version",
+    "tenant",
+    "auth",
+    "branding",
+    "intake",
+    "personas",
+    "simulation",
+    "llm",
+    "memory",
+    "limits",
+    "review",
+    "calibration",
+    "retention_days"
+  ],
+  "title": "Coreset MRE tenant configuration",
+  "type": "object"
+}

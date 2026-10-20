@@ -1,0 +1,129 @@
+# Example tenant (blueprint §6). No secrets in this file: only vault:// references.
+schema_version: 1
+tenant:
+  id: 3f6c2a9e-0d4b-4f0e-9a51-2b8e7d1c4a10      # generated at onboarding
+  slug: acme-outdoors
+  display_name: "Acme Outdoors"
+  status: active                                 # active | suspended | offboarding
+  contract:
+    permitted_uses: [market_research, messaging_pretest, pricing_research]
+    forbidden_uses_acknowledged: true            # credit/insurance/employment/housing/eligibility
+    agreement_ref: "MSA-2026-014"
+  data_region: us                                # storage + processing region
+  contacts:
+    admin_email: "ops@acme.example"              # notifications only if enabled below
+
+auth:
+  oidc:
+    issuer: "https://login.acme.example/"        # or Coreset-hosted IdP
+    client_id_ref: "vault://tenants/acme-outdoors/oidc#client_id"
+    allowed_email_domains: ["acme.example"]
+    require_mfa_for_admins: true
+  api_keys:
+    enabled: true
+    max_active_keys: 5
+    default_ttl_days: 90
+    ip_allowlist: []                             # optional CIDRs
+  roles_default: tenant_member
+
+branding:
+  white_label: true
+  brand_name: "Acme Insights"                    # name on the report cover
+  show_powered_by_coreset: false
+  logo_uri: "s3://mre-data/tenants/3f6c2a9e-0d4b-4f0e-9a51-2b8e7d1c4a10/branding/logo.svg"
+  colors: { primary: "#1F3A5F", secondary: "#4F81BD", accent: "#F2A900", text: "#222222" }
+  fonts: { heading: "Montserrat", body: "Source Sans 3" }   # must be licensed for embedding
+  report_title: "Market Response Report"
+  footer_text: "Confidential: prepared for Acme Outdoors"
+  disclaimer_addendum: ""                        # appended; cannot replace standard text
+  locale: en-US
+  formats: [docx, pdf]
+  pdf_archival: false                            # PDF/A-2b
+
+intake:
+  allowed_categories: [consumer_goods, outdoor_recreation, apparel, subscription_services]
+  max_copy_variants: 5
+  max_alt_price_points: 5
+  max_upload_mb: 20
+  scraping:
+    enabled: true
+    allowed_domains: ["acme.example"]            # registrable domains; job-level must be a subset
+    exclude_paths: ["/careers", "/blog/comments"]
+    max_pages: 25
+    use_headless_browser: false
+
+personas:
+  mode: synthetic                                # synthetic | cohort (cohort requires entitlement)
+  cohort_entitlement: false
+  default_market:
+    country: US
+    regions: []                                  # e.g. ["South", "West"] or state codes
+    age_bands: ["25-34", "35-44", "45-54"]
+    income_bands: ["$50k-$75k", "$75k-$100k", "$100k-$150k"]
+  segments: { count: 6, min_cards_per_segment: 5 }
+  panel_size: { target: 100, min: 25, max: 200, tolerance: 0.10 }
+  marginal_tolerance_pp: 3
+
+simulation:
+  engine: mirofish                               # adapter name; swap here
+  engine_version: "0.1.2+git7657031+coreset.1"   # pinned image tag
+  platforms: [twitter, reddit]
+  max_rounds: 24                                 # start below 40 per README guidance
+  enable_graph_memory_update: false
+  ensemble:
+    runs_per_arm: 5
+    min_successful_runs: 3
+    model_families: ["sim-primary", "sim-secondary"]   # gateway routes; >=2 recommended
+    random_seed_base: 1000
+  baseline: { enabled: true, route: "analysis-primary" }
+  interviews:
+    price_probes: true
+    van_westendorp: true
+    custom_questions_max: 5
+
+llm:
+  policy: third_party_allowed                    # third_party_allowed | self_hosted_only
+  routes:
+    simulation: [sim-primary, sim-fallback]
+    analysis: [analysis-primary, analysis-fallback]
+  provider_allowlist: ["provider-a", "provider-b"]   # names defined in config/llm_gateway
+  store_prompt_text: false
+
+memory:
+  backend: zep_cloud
+  api_key_ref: "vault://tenants/acme-outdoors/zep#api_key"   # or "vault://shared/zep#pooled"
+  delete_after_run: true
+
+limits:
+  rate: { reads_per_min: 60, writes_per_min: 10, jobs_per_hour: 5 }
+  concurrency: { max_running_jobs: 2, max_concurrent_runs: 6 }
+  cost:
+    per_job_usd_cap: 150
+    monthly_usd_cap: 2000
+    require_admin_approval_above_usd: 100
+    zep_monthly_ops_cap: 200000
+
+review:
+  require_analyst: true                          # MVP default true for all tenants
+  auto_rerun_budget_fraction: 0.5
+
+calibration:
+  enabled: true
+  min_outcomes: 5
+  share_track_record_in_reports: true
+  category_pooling: false                        # pool with other tenants' anonymized metrics (opt-in)
+
+retention_days:
+  raw_scrape: 30
+  run_artifacts: 90
+  reports: 730
+  intake: 730
+  outcomes: null                                 # life of account
+
+notifications:
+  enabled: false                                 # nothing is sent until enabled and approved
+  channels: []                                   # e.g. [{type: webhook, url_ref: "vault://..."}]
+
+features:
+  portal_persona_chat: false                     # v2: interview personas in the portal
+  export_csv: true

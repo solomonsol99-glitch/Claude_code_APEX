@@ -74,7 +74,7 @@ markers = [
     "db: needs a PostgreSQL server (DATABASE_URL or a local initdb)",
     "docker: needs a Docker daemon",
 ]
-addopts = "-m 'not live' --strict-markers"
+addopts = "-m 'not live' --strict-markers --import-mode=importlib"
 
 [tool.coverage.run]
 branch = true
