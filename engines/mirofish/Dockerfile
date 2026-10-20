@@ -68,9 +68,12 @@ RUN groupadd --gid 10001 engine && useradd --uid 10001 --gid 10001 --no-create-h
 WORKDIR /opt/mirofish
 COPY --from=build --chown=0:0 /src/mirofish/backend /opt/mirofish/backend
 COPY --from=build --chown=0:0 /src/mirofish/LICENSE /opt/mirofish/LICENSE
+# backend/app/utils/locale.py reads ../../../locales at import time.
+COPY --from=build --chown=0:0 /src/mirofish/locales /opt/mirofish/locales
 COPY --chown=0:0 NOTICE SOURCE_OFFER.md /opt/mirofish/
-# uploads/ is a size-limited tmpfs at runtime (read-only rootfs); keep the mount point owned by the engine user.
-RUN mkdir -p /opt/mirofish/backend/uploads && chown 10001:10001 /opt/mirofish/backend/uploads
+# uploads/ and logs/ are size-limited tmpfs mounts at runtime (read-only rootfs).
+RUN mkdir -p /opt/mirofish/backend/uploads /opt/mirofish/backend/logs \
+ && chown 10001:10001 /opt/mirofish/backend/uploads /opt/mirofish/backend/logs
 ENV PATH="/opt/mirofish/backend/.venv/bin:${PATH}" \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

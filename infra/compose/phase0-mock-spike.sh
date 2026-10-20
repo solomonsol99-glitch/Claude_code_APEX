@@ -17,6 +17,7 @@ docker run -d --name mre-spike-llm --network "$NET" --network-alias llm-gateway 
 docker run -d --name mre-spike-engine --network "$NET" \
   --read-only --cap-drop ALL --security-opt no-new-privileges --user 10001:10001 \
   --tmpfs /opt/mirofish/backend/uploads:size=2g,uid=10001,gid=10001,mode=0700 \
+  --tmpfs /opt/mirofish/backend/logs:size=256m,uid=10001,gid=10001,mode=0700 \
   --tmpfs /tmp:size=256m,uid=10001,gid=10001 \
   --memory 4g --cpus 2 \
   -e LLM_BASE_URL=http://llm-gateway:4000/v1 -e LLM_API_KEY=fake -e LLM_MODEL_NAME=fake-model \
@@ -24,7 +25,7 @@ docker run -d --name mre-spike-engine --network "$NET" \
   "$IMAGE" >/dev/null
 
 # All requests are made from inside the internal network (a throwaway curl-capable container = the engine itself).
-req() { docker exec mre-spike-engine python - "$@" <<'PY'
+req() { docker exec -i mre-spike-engine python - "$@" <<'PY'
 import json, sys, urllib.request
 method, path = sys.argv[1], sys.argv[2]
 data = sys.argv[3].encode() if len(sys.argv) > 3 else None
@@ -37,7 +38,10 @@ except urllib.error.HTTPError as e:
     print(e.code, e.read().decode()[:2000])
 PY
 }
-for i in $(seq 1 60); do
+for i in $(seq 1 90); do
+  if [ "$(docker inspect -f '{{.State.Running}}' mre-spike-engine)" != "true" ]; then
+    echo "engine exited during startup:"; docker logs --tail 40 mre-spike-engine; exit 1
+  fi
   if req GET /health 2>/dev/null | grep -q '^200'; then break; fi; sleep 1
 done
 {
@@ -46,7 +50,7 @@ done
   echo "== GET /health"; req GET /health
   echo "== GET /api/simulation/list"; req GET /api/simulation/list
   echo "== ontology/generate (multipart, fake LLM)"
-  docker exec mre-spike-engine python - <<'PY'
+  docker exec -i mre-spike-engine python - <<'PY'
 import json, urllib.request, uuid
 b = uuid.uuid4().hex
 seed = b"# Seed\nA new product is being introduced. Persona dossier: Dana (Consumer), Lee (Consumer).\n"

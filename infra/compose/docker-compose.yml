@@ -78,6 +78,7 @@ services:
     labels: { mre.engine: "true" }
     tmpfs:
       - /opt/mirofish/backend/uploads:size=2g,uid=10001,gid=10001,mode=0700
+      - /opt/mirofish/backend/logs:size=256m,uid=10001,gid=10001,mode=0700
       - /tmp:size=256m,uid=10001,gid=10001
     environment:
       # Real values are injected per run by the worker from Vault. These are dev placeholders.
