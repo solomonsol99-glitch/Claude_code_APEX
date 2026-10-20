@@ -37,9 +37,25 @@ RUN set -e; cd /src/mirofish; \
     done
 WORKDIR /src/mirofish/backend
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
+# The upstream lock pulls CUDA PyTorch (via sentence-transformers) plus ~36 nvidia-* wheels,
+# many GB the engine never uses (no GPU). With TORCH_INDEX_URL set (default: CPU wheels),
+# install every locked package at its locked version except torch/triton/nvidia-*, then the
+# same torch version from the CPU index. Set TORCH_INDEX_URL="" to install the lock verbatim.
+ARG TORCH_INDEX_URL=https://download.pytorch.org/whl/cpu
+ENV UV_NO_CACHE=1
 RUN --mount=type=secret,id=extra_ca,required=false \
     if [ -s "$CA_SECRET" ]; then export SSL_CERT_FILE="$CA_SECRET"; fi; \
-    uv sync --frozen --no-dev --no-install-project
+    set -e; \
+    if [ -z "$TORCH_INDEX_URL" ]; then \
+      uv sync --frozen --no-dev --no-install-project; \
+    else \
+      uv venv .venv; \
+      uv export --frozen --no-dev --no-hashes --no-emit-project -o /tmp/locked.txt; \
+      TORCH_VERSION="$(grep -E '^torch==' /tmp/locked.txt | sed -E 's/^torch==([^ ;]+).*/\1/')"; \
+      grep -vE '^(torch|triton|nvidia-[a-z0-9-]+)==' /tmp/locked.txt > /tmp/no-torch.txt; \
+      uv pip install --python .venv --no-deps -r /tmp/no-torch.txt; \
+      uv pip install --python .venv --no-deps --index-url "$TORCH_INDEX_URL" "torch==${TORCH_VERSION}"; \
+    fi
 
 FROM ${REGISTRY_PREFIX}python:${PYTHON_VERSION}-slim-bookworm AS runtime
 ARG MIROFISH_REF
