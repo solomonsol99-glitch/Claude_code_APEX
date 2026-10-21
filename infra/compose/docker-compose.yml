@@ -96,6 +96,19 @@ services:
         limits: { cpus: "2", memory: 4g }
     networks: [engine-net]
 
+  # Deny-all egress for the engine zone (§3.7): HTTPS CONNECT to allowlisted hosts only,
+  # every decision logged. Keep EGRESS_ALLOW in step with config/egress/allowlist.yaml.
+  egress-proxy:
+    <<: *hardened
+    profiles: ["engine"]
+    build:
+      context: ../egress-proxy
+      args: { REGISTRY_PREFIX: "${REGISTRY_PREFIX:-}" }
+    tmpfs: ["/tmp:size=64m,uid=10001,gid=10001"]
+    environment:
+      EGRESS_ALLOW: ${ENGINE_EGRESS_ALLOW:-}
+    networks: [engine-net, egress-net]
+
   # Phase 0 only: OpenAI-compatible fake so the engine can be driven with no spend.
   fake-llm:
     profiles: ["spike"]
@@ -120,3 +133,5 @@ networks:
   # (LLM gateway, egress proxy, OTel). §2.4.4, §3.7.
   engine-net:
     internal: true
+  # The only network with a route out; only egress-proxy joins it.
+  egress-net: {}

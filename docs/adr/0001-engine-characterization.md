@@ -1,6 +1,7 @@
 # ADR 0001: MiroFish engine characterization (Phase 0)
 
-- Status: **in progress** — mock-only part done; the live part waits on Peter's spend approval
+- Status: **in progress** — mock-only part done; live budget approved 2026-10-21; live run
+  tooling ready, run blocked on credentials (see "Live run attempt")
 - Date: 2026-10-20
 - Blueprint sections: §8.1, §2.4, assumption register A1–A9
 - Pinned upstream commit: `7657031ac01184afe2cb220f5ee3545573b5e843` (upstream HEAD still matched on 2026-10-20)
@@ -34,6 +35,35 @@
   torch is used later (simulation/recsys). **The CPU-index build is unverified** and must be
   checked in CI or on a machine that can reach the index.
 - Docker Hub rate-limited the sandbox; `REGISTRY_PREFIX` lets builds use a mirror.
+
+## Live run attempt (2026-10-21)
+Nothing was spent: both preflight checks failed, so no engine run started.
+
+| Input | Result |
+|---|---|
+| Zep Cloud key | The session's proxy-provided Zep credential is not applied: every authenticated call to `api.getzep.com` returns **401** (`/healthz` returns 200, so the host is reachable). Needs a working dev-project key. |
+| LLM route | **None available.** `api.openai.com` and `openrouter.ai` are denied by the session network policy; no other OpenAI-compatible route or key is configured. Needs a route (host + key + model) and that host allowed. |
+| CPU torch index | `download.pytorch.org` is still blocked here, so the CPU-index build stays unverified. |
+
+Built so the live run is one command once credentials work:
+- `infra/egress-proxy/`: the deny-all egress proxy the compose file already pointed the
+  engine at (`egress-proxy:3128`) but did not define. HTTPS CONNECT only, to exact hosts
+  in `EGRESS_ALLOW`, port 443; everything else gets 403. Each decision goes to a JSONL log,
+  which is the evidence for A4 and A5. Optional `UPSTREAM_PROXY` chains through another
+  proxy. Now a compose service on `engine-net` + a new `egress-net`. Checked in this
+  sandbox: a container on an `--internal` network reached `api.getzep.com` only through
+  it; `api.openai.com` and plain HTTP were denied and logged; a direct connection failed.
+- `infra/compose/phase0-live-run.sh` (`make live-run`): preflights the Zep key and LLM
+  route before any spend, starts proxy + engine (hardened as in the mock spike), runs the
+  live contract test at `LIVE_AGENTS`/`LIVE_ROUNDS` (default 10/3), and writes the egress
+  log, a host/decision summary, and Zep graph lists before/after the run (A6) to `$OUT`.
+- The live contract test used the fake's millisecond timeouts (5 s graph build) and
+  busy-looped on status; it now uses the default stage timeouts, sleeps between polls and
+  is sized by `LIVE_AGENTS`/`LIVE_ROUNDS`.
+
+To run: export `ZEP_API_KEY`, `LLM_BASE_URL` (https), `LLM_API_KEY`, `LLM_MODEL_NAME`,
+build the engine image, then `make live-run` (add `EXTRA_CA=...` behind a TLS-intercepting
+proxy). The A1 agent-count study (10× prepare at 25/50/100/200) follows the first green run.
 
 ## Assumption register status
 | ID | Status | Evidence / next step |
