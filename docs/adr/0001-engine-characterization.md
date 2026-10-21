@@ -65,6 +65,17 @@ To run: export `ZEP_API_KEY`, `LLM_BASE_URL` (https), `LLM_API_KEY`, `LLM_MODEL_
 build the engine image, then `make live-run` (add `EXTRA_CA=...` behind a TLS-intercepting
 proxy). The A1 agent-count study (10× prepare at 25/50/100/200) follows the first green run.
 
+### Second attempt (2026-10-21, later)
+`make live-run` stopped at preflight again; nothing was spent on the run (two tiny LLM
+calls of a few tokens were used to probe the route).
+
+| Input | Result |
+|---|---|
+| Zep Cloud key | `ZEP_API_KEY` is now set, but `api.getzep.com` still answers **401 unauthorized** on every v2 route tried (`projects/info`, `graph/list-all`, `users-ordered`), with `Api-Key` or `Bearer`. The key or its project is not valid for the Zep Cloud API. Needs a fresh key from the dev project. |
+| LLM route | Now set: Anthropic's OpenAI-compatible endpoint (`https://api.anthropic.com/v1/`, `claude-haiku-5-5`). Key works; plain chat completions return 200. The preflight now sends `anthropic-version` so `GET /models` passes on this route. |
+| LLM route vs. pinned engine | **Will fail as is.** The engine sends `response_format: {"type": "json_object"}` (`llm_client.py`, `simulation_config_generator.py:451`, `oasis_profile_generator.py:580`). Anthropic's endpoint rejects it (`400 response_format.type: Input should be 'json_schema'`), and that error does not match upstream's "unsupported response_format" fallback check, so ontology generation would fail. Fix options: a `patches/` patch that drops or widens the fallback for this error, or a route that accepts `json_object`. |
+| Docker | The fresh sandbox had no running daemon; started `dockerd` by hand. The engine image must be rebuilt each session (`make engine-image`). |
+
 ## Assumption register status
 | ID | Status | Evidence / next step |
 |---|---|---|

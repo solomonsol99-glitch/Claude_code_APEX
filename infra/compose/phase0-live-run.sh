@@ -33,7 +33,8 @@ zep() { curl -sS -m 30 -H "Authorization: Api-Key $ZEP_API_KEY" "https://$ZEP_HO
 # --- preflight: fail before any spend if a credential is wrong ---------------------------
 code="$(curl -sS -m 30 -o /dev/null -w '%{http_code}' -H "Authorization: Api-Key $ZEP_API_KEY" "https://$ZEP_HOST/api/v2/projects/info")"
 [ "$code" = 200 ] || { echo "preflight: Zep key rejected (HTTP $code)"; exit 3; }
-code="$(curl -sS -m 30 -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $LLM_API_KEY" "${LLM_BASE_URL%/}/models")"
+# anthropic-version is required by Anthropic's OpenAI-compatible route and ignored elsewhere.
+code="$(curl -sS -m 30 -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $LLM_API_KEY" -H "anthropic-version: 2023-06-01" "${LLM_BASE_URL%/}/models")"
 [ "$code" = 200 ] || { echo "preflight: LLM route rejected GET /models (HTTP $code)"; exit 3; }
 zep "graph/list-all?pageSize=1000" > "$OUT/zep-graphs-before.json"
 
