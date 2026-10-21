@@ -64,3 +64,12 @@ to run (a) one end-to-end run at 10 agents / 3 rounds behind a deny-all egress p
 - **Needed before retrying:** `api.getzep.com` and one LLM provider host allowed in the
   environment's network settings, and `ZEP_API_KEY` plus `LLM_API_KEY` (and `LLM_BASE_URL`,
   `LLM_MODEL_NAME` if not OpenAI) set as environment secrets. Nothing live was run.
+
+### 2026-10-21 — pre-flight retry (still blocked, no spend)
+- `api.getzep.com` is now reachable (`/healthz` 200), but authenticated calls return 401:
+  the proxy injects the Zep credential for `app.getzep.com` (dashboard) only, and no
+  `ZEP_API_KEY` is set. The credential must be bound to `api.getzep.com`, or the key set as
+  an environment secret.
+- LLM: OpenAI, OpenRouter, DeepSeek, DashScope, Together and Groq are still refused.
+  `generativelanguage.googleapis.com` is reachable but there is no key. No LLM key set.
+- `download.pytorch.org` still refused.
