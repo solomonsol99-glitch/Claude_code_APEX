@@ -49,6 +49,6 @@
 | A9 cross-model variance | Open. | Needs two live model families. |
 
 ## Decision needed from Peter
-Approve a small, capped live budget for: a Zep Cloud key (dev project) and one LLM route,
+**Approved by Peter on 2026-10-21.** A small, capped live budget for: a Zep Cloud key (dev project) and one LLM route,
 to run (a) one end-to-end run at 10 agents / 3 rounds behind a deny-all egress proxy, and
 (b) the A1 agent-count study. Nothing live runs until approved.

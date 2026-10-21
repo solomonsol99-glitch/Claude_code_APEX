@@ -1,6 +1,6 @@
 # ADR 0002: Deviations from the blueprint in build steps 1–3
 
-- Status: proposed (needs Peter's review)
+- Status: accepted (Peter approved items 4–7, 2026-10-21)
 - Date: 2026-10-20
 - Blueprint sections: §2.4, §2.7, §3.1, §1.4, §6, coding standards
 
