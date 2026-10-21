@@ -1,6 +1,6 @@
 # ADR 0001: MiroFish engine characterization (Phase 0)
 
-- Status: **in progress** — mock-only part done; the live part waits on Peter's spend approval
+- Status: **in progress** — mock-only part done; live part approved, blocked on keys and egress (see Live run log)
 - Date: 2026-10-20
 - Blueprint sections: §8.1, §2.4, assumption register A1–A9
 - Pinned upstream commit: `7657031ac01184afe2cb220f5ee3545573b5e843` (upstream HEAD still matched on 2026-10-20)
@@ -52,3 +52,15 @@
 **Approved by Peter on 2026-10-21.** A small, capped live budget for: a Zep Cloud key (dev project) and one LLM route,
 to run (a) one end-to-end run at 10 agents / 3 rounds behind a deny-all egress proxy, and
 (b) the A1 agent-count study. Nothing live runs until approved.
+
+## Live run log
+### 2026-10-21 — pre-flight check (blocked, no spend)
+- **Keys:** no Zep or LLM API key in the session environment.
+- **Egress:** the sandbox proxy has a Zep entry for `app.getzep.com`, but that host is Zep's
+  web dashboard (Next.js, every `/api/v2/*` path returns an HTML 404). The SDK's API host
+  `api.getzep.com` is refused by the proxy (CONNECT 403). All LLM provider hosts tried
+  (`api.openai.com`, `openrouter.ai`, `api.deepseek.com`, `dashscope.aliyuncs.com`) are
+  refused, as is `download.pytorch.org` (CPU torch index).
+- **Needed before retrying:** `api.getzep.com` and one LLM provider host allowed in the
+  environment's network settings, and `ZEP_API_KEY` plus `LLM_API_KEY` (and `LLM_BASE_URL`,
+  `LLM_MODEL_NAME` if not OpenAI) set as environment secrets. Nothing live was run.
