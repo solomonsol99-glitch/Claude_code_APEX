@@ -1,6 +1,6 @@
 # ADR 0001: MiroFish engine characterization (Phase 0)
 
-- Status: **in progress** — mock-only part done; the live part waits on Peter's spend approval
+- Status: **in progress** — mock-only part done; live part approved ($25 cap) but blocked on session setup (see below)
 - Date: 2026-10-20
 - Blueprint sections: §8.1, §2.4, assumption register A1–A9
 - Pinned upstream commit: `7657031ac01184afe2cb220f5ee3545573b5e843` (upstream HEAD still matched on 2026-10-20)
@@ -52,3 +52,22 @@
 **Approved by Peter on 2026-10-21.** A small, capped live budget for: a Zep Cloud key (dev project) and one LLM route,
 to run (a) one end-to-end run at 10 agents / 3 rounds behind a deny-all egress proxy, and
 (b) the A1 agent-count study. Nothing live runs until approved.
+
+## Live run attempt (2026-10-21) — blocked, $0 spent
+Pre-flight checks before any live call; nothing was started.
+
+| Check | Result |
+|---|---|
+| `ZEP_API_KEY` in the session environment | **Not set** |
+| `LLM_API_KEY` in the session environment | **Not set** (`LLM_BASE_URL`, `LLM_MODEL_NAME` also unset) |
+| Egress to `api.getzep.com` | **Denied** by the cloud environment's network policy (proxy 403) |
+| Egress to the LLM provider (probed `api.openai.com`) | **Denied** (proxy 403) |
+
+Not run: the 10-agent / 3-round end-to-end run and the A1 study. Spend so far: **$0 of $25**.
+
+To unblock (environment settings, then a new session):
+1. Add `ZEP_API_KEY` and `LLM_API_KEY` as secrets/environment variables, plus `LLM_BASE_URL`
+   and `LLM_MODEL_NAME` for the chosen LLM route.
+2. Allow `api.getzep.com` and the LLM route's host under the environment's allowed domains.
+   The engine itself still runs behind our deny-all egress proxy; this only lets that proxy
+   forward the two allowlisted hosts.
