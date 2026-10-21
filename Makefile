@@ -35,7 +35,10 @@ up: ## Start the local stack (copy infra/compose/.env.example to .env first)
 spike-up: ## Phase 0: engine + fake LLM, no spend
 	docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml --profile engine --profile spike up -d engine-1 fake-llm
 
+live-run: ## Phase 0 live run: real LLM + Zep, 10 agents / 3 rounds, deny-all egress (SPENDS MONEY)
+	infra/compose/phase0-live-run.sh
+
 down: ## Stop the local stack
 	docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml --profile engine --profile spike down
 
-.PHONY: help install lint fmt typecheck test cov engine-image up spike-up down
+.PHONY: help install lint fmt typecheck test cov engine-image up spike-up live-run down

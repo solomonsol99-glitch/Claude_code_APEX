@@ -48,6 +48,21 @@
 | A8 vendor terms | Open (legal). | `docs/compliance/vendors.md`. |
 | A9 cross-model variance | Open. | Needs two live model families. |
 
+## Live run attempt (2026-10-21)
+`make live-run` (`infra/compose/phase0-live-run.sh`) starts the engine on an internal-only
+network behind a deny-all egress proxy (`infra/compose/egress-proxy/`, allowlist = LLM host +
+`api.getzep.com`), checks that other hosts are refused, then runs a free credential preflight
+before any paid call. First attempt, no spend:
+
+| Check | Result |
+|---|---|
+| Deny-all egress (`example.com` from the engine) | Refused |
+| LLM key, through the egress proxy | 200 |
+| Zep key, through the egress proxy | **403** (401 from the host). Run stopped before spending. |
+
+**Blocked:** the Zep key in the environment is not accepted. Needs a valid Zep Cloud key
+for the dev project, then re-run `make live-run`.
+
 ## Decision needed from Peter
 **Approved by Peter on 2026-10-21.** A small, capped live budget for: a Zep Cloud key (dev project) and one LLM route,
 to run (a) one end-to-end run at 10 agents / 3 rounds behind a deny-all egress proxy, and
