@@ -1,5 +1,6 @@
 .DEFAULT_GOAL := help
 UV ?= uv
+COMMA := ,
 TYPED_PACKAGES := packages/core/src packages/net/src packages/security/src packages/engine_adapter/src packages/reporting/src
 
 help: ## List targets
@@ -35,7 +36,18 @@ up: ## Start the local stack (copy infra/compose/.env.example to .env first)
 spike-up: ## Phase 0: engine + fake LLM, no spend
 	docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml --profile engine --profile spike up -d engine-1 fake-llm
 
+engine-image-sandbox: ## Sandbox only: add torch's locked CUDA libs when download.pytorch.org is blocked
+	docker build $(if $(REGISTRY_PREFIX),--build-arg REGISTRY_PREFIX=$(REGISTRY_PREFIX)) \
+	  $(if $(EXTRA_CA_BUNDLE),--secret id=extra_ca$(COMMA)src=$(EXTRA_CA_BUNDLE)) \
+	  -t coreset/mirofish-engine:dev -f infra/live/Dockerfile.sandbox-cuda infra/live
+
+live-preflight: ## Phase 0: check image (torch, oasis), Zep key and LLM key; no spend
+	PREFLIGHT_ONLY=1 infra/compose/phase0-live-run.sh
+
+live-run: ## Phase 0 live run: 10 agents x 3 rounds, real LLM + Zep behind deny-all egress (SPENDS, capped)
+	infra/compose/phase0-live-run.sh
+
 down: ## Stop the local stack
 	docker compose --env-file infra/compose/.env -f infra/compose/docker-compose.yml --profile engine --profile spike down
 
-.PHONY: help install lint fmt typecheck test cov engine-image up spike-up down
+.PHONY: help install lint fmt typecheck test cov engine-image up spike-up down engine-image-sandbox live-preflight live-run

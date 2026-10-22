@@ -94,6 +94,7 @@ async def handle(cr: asyncio.StreamReader, cw: asyncio.StreamWriter) -> None:
     log(
         event="allow",
         host=host,
+        client=str(peer),
         bytes_up=up[0],
         bytes_down=down[0],
         seconds=round(time.monotonic() - t0, 2),

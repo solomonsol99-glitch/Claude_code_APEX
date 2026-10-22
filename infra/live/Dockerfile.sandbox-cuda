@@ -1,0 +1,26 @@
+# syntax=docker/dockerfile:1.7
+# SANDBOX ONLY. Never ship this image.
+# Where download.pytorch.org is blocked, the engine image is built with PyPI torch
+# (TORCH_INDEX_URL=https://pypi.org/simple), which is the CUDA build installed without its
+# nvidia-*/triton deps, so `import torch` fails. This layer adds those deps at the versions
+# torch 2.9.1 locks in upstream backend/uv.lock (pinned commit 7657031). No GPU is used.
+ARG REGISTRY_PREFIX=
+ARG BASE_IMAGE=coreset/mirofish-engine:dev
+
+FROM ${REGISTRY_PREFIX}python:3.12-slim-bookworm AS cuda
+ENV CA_SECRET=/run/secrets/extra_ca
+RUN --mount=type=secret,id=extra_ca,required=false \
+    if [ -s "$CA_SECRET" ]; then export PIP_CERT="$CA_SECRET"; fi; \
+    pip install --no-cache-dir --no-deps --target /cuda \
+      nvidia-cublas-cu12==12.8.4.1 nvidia-cuda-cupti-cu12==12.8.90 \
+      nvidia-cuda-nvrtc-cu12==12.8.93 nvidia-cuda-runtime-cu12==12.8.90 \
+      nvidia-cudnn-cu12==9.10.2.21 nvidia-cufft-cu12==11.3.3.83 \
+      nvidia-cufile-cu12==1.13.1.3 nvidia-curand-cu12==10.3.9.90 \
+      nvidia-cusolver-cu12==11.7.3.90 nvidia-cusparse-cu12==12.5.8.93 \
+      nvidia-cusparselt-cu12==0.7.1 nvidia-nccl-cu12==2.27.5 \
+      nvidia-nvjitlink-cu12==12.8.93 nvidia-nvshmem-cu12==3.3.20 \
+      nvidia-nvtx-cu12==12.8.90 triton==3.5.1
+
+FROM ${BASE_IMAGE}
+LABEL mre.sandbox-only="true"
+COPY --from=cuda --chown=0:0 /cuda/ /opt/mirofish/backend/.venv/lib/python3.12/site-packages/

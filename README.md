@@ -13,7 +13,7 @@ Oct 20 2026). Section references below (§N) point into it.
 
 | Step | What | Status |
 |---|---|---|
-| 0 | Phase 0 engine spike | Mock-only part in progress; live run waits on Peter's spend approval. See `docs/adr/0001-engine-characterization.md` |
+| 0 | Phase 0 engine spike | Mock part done. Live budget approved; `make live-run` ready but blocked on a Zep key that returns 401. See `docs/adr/0001-engine-characterization.md` |
 | 1 | Repo skeleton, tooling, CI, Compose | Done |
 | 2 | `packages/core`: config, tenant schema, DB, RLS | Done |
 | 3 | `packages/engine_adapter` (+ minimal `packages/net`) | Done |
@@ -34,6 +34,8 @@ make engine-image     # build the pinned MiroFish engine image
 cp infra/compose/.env.example infra/compose/.env   # then edit placeholders
 make up               # Postgres, Redis, MinIO, Vault (dev), OTel collector
 make spike-up         # Phase 0: engine + fake LLM (no spend)
+make live-preflight   # Phase 0: image, Zep and LLM key checks (no spend)
+make live-run         # Phase 0: one real run, capped spend (needs LLM_* and ZEP_API_KEY)
 ```
 
 Tests marked `live` (real LLM / Zep) never run by default.
