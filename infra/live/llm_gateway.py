@@ -37,10 +37,19 @@ PRICE_IN = float(os.environ.get("PRICE_IN_PER_MTOK", "0"))
 PRICE_OUT = float(os.environ.get("PRICE_OUT_PER_MTOK", "0"))
 LOG = os.environ.get("GATEWAY_LOG", "/tmp/gateway.jsonl")
 PORT = int(os.environ.get("GATEWAY_PORT", "4000"))
-DROP = ("temperature", "top_p", "top_k", "frequency_penalty", "presence_penalty", "seed",
-        "logit_bias", "logprobs", "top_logprobs", "n")
-JSON_ONLY = ("Respond with one valid JSON object only. No prose, no markdown, "
-             "no code fences.")
+DROP = (
+    "temperature",
+    "top_p",
+    "top_k",
+    "frequency_penalty",
+    "presence_penalty",
+    "seed",
+    "logit_bias",
+    "logprobs",
+    "top_logprobs",
+    "n",
+)
+JSON_ONLY = "Respond with one valid JSON object only. No prose, no markdown, no code fences."
 FENCE = re.compile(r"^\s*```(?:json)?\s*(.*?)\s*```\s*$", re.S)
 
 _lock = threading.Lock()
@@ -65,8 +74,10 @@ def _shim(body: dict[str, object]) -> list[str]:
         msgs = body.get("messages")
         if isinstance(msgs, list):
             first = msgs[0] if msgs else None
-            if isinstance(first, dict) and first.get("role") == "system" and isinstance(
-                first.get("content"), str
+            if (
+                isinstance(first, dict)
+                and first.get("role") == "system"
+                and isinstance(first.get("content"), str)
             ):
                 first["content"] = f"{first['content']}\n\n{JSON_ONLY}"
             else:
@@ -134,8 +145,7 @@ class Handler(BaseHTTPRequestHandler):
             f"{UPSTREAM}/chat/completions",
             data=json.dumps(body).encode(),
             method="POST",
-            headers={"Content-Type": "application/json",
-                     "Authorization": f"Bearer {UPSTREAM_KEY}"},
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {UPSTREAM_KEY}"},
         )
         try:
             with urllib.request.urlopen(req, timeout=300) as resp:
@@ -164,9 +174,15 @@ class Handler(BaseHTTPRequestHandler):
             _state["completion_tokens"] += pout
             spent = _state["spent_usd"]
         rec: dict[str, object] = {
-            "event": "call", "status": status, "prompt_tokens": pin, "completion_tokens": pout,
-            "cost_usd": round(cost, 6), "spent_usd": round(spent, 6), "shims": shims,
-            "max_tokens": body.get("max_tokens"), "seconds": round(time.monotonic() - t0, 2),
+            "event": "call",
+            "status": status,
+            "prompt_tokens": pin,
+            "completion_tokens": pout,
+            "cost_usd": round(cost, 6),
+            "spent_usd": round(spent, 6),
+            "shims": shims,
+            "max_tokens": body.get("max_tokens"),
+            "seconds": round(time.monotonic() - t0, 2),
             "finish": [c.get("finish_reason") for c in out.get("choices") or []],
         }
         if status >= 400:
@@ -176,6 +192,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print(f"llm gateway on :{PORT} -> {UPSTREAM} model={UPSTREAM_MODEL} budget=${BUDGET_USD}",
-          flush=True)
+    print(
+        f"llm gateway on :{PORT} -> {UPSTREAM} model={UPSTREAM_MODEL} budget=${BUDGET_USD}",
+        flush=True,
+    )
     ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()

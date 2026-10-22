@@ -1,4 +1,4 @@
-# ruff: noqa: S104, S108, S310  (container-only service: binds all ifaces, logs to tmpfs, fixed https upstream)
+# ruff: noqa: S104, S108  (container-only service: binds all ifaces, logs to tmpfs, fixed https upstream)
 """Deny-all egress proxy for the Phase 0 live run (blueprint §2.4.4, §3.7).
 
 Accepts HTTPS CONNECT to hosts in EGRESS_ALLOW only, port 443 only. Everything else
@@ -91,14 +91,22 @@ async def handle(cr: asyncio.StreamReader, cw: asyncio.StreamWriter) -> None:
     up, down = [0], [0]
     t0 = time.monotonic()
     await asyncio.gather(pipe(cr, uw, up), pipe(ur, cw, down))
-    log(event="allow", host=host, bytes_up=up[0], bytes_down=down[0],
-        seconds=round(time.monotonic() - t0, 2))
+    log(
+        event="allow",
+        host=host,
+        bytes_up=up[0],
+        bytes_down=down[0],
+        seconds=round(time.monotonic() - t0, 2),
+    )
 
 
 async def main() -> None:
     server = await asyncio.start_server(handle, "0.0.0.0", PORT)
-    print(f"egress proxy on :{PORT}, allow={sorted(ALLOW)}, upstream={UPSTREAM or 'direct'}",
-          file=sys.stderr, flush=True)
+    print(
+        f"egress proxy on :{PORT}, allow={sorted(ALLOW)}, upstream={UPSTREAM or 'direct'}",
+        file=sys.stderr,
+        flush=True,
+    )
     async with server:
         await server.serve_forever()
 
