@@ -115,6 +115,7 @@ docker run -d --name "$ENGINE" --network "$INT" "${HARDEN[@]}" \
   -e HTTPS_PROXY=http://egress-proxy:3128 -e HTTP_PROXY=http://egress-proxy:3128 \
   -e https_proxy=http://egress-proxy:3128 -e http_proxy=http://egress-proxy:3128 \
   -e NO_PROXY=llm-gateway,localhost,127.0.0.1 -e no_proxy=llm-gateway,localhost,127.0.0.1 \
+  -e OASIS_DB_PATH=/tmp/oasis-followers.db \
   -e HF_HUB_OFFLINE=1 -e SECRET_KEY="$(openssl rand -hex 32)" -e FLASK_DEBUG=false \
   "$IMAGE" >/dev/null
 

@@ -81,6 +81,21 @@ Next step: Peter issues a new Zep dev-project key, then `make live-preflight && 
 - **`oasis` writes `./log` at import time** (`oasis/social_platform/platform.py`). The engine
   launches simulations with `cwd` in `uploads/` (tmpfs), so it works; anything else that
   imports `oasis` on the read-only rootfs needs a writable `cwd`.
+- **OASIS writes into its own package dir.** `oasis.social_platform.database.get_db_path()`
+  calls `os.makedirs(<site-packages>/oasis/data)` on every agent prompt unless
+  `OASIS_DB_PATH` is set, so the first simulation round crashes on the read-only rootfs.
+  MiroFish never sets it. Upstream's default points at a database that never exists, so
+  agents always see 0 followers; `OASIS_DB_PATH=/tmp/oasis-followers.db` (tmpfs) keeps that
+  behaviour and is now set by `phase0-live-run.sh`. Found in a standalone OASIS demo run on
+  2026-10-22 (10 agents, 3 rounds, reddit, Claude Haiku: 40 calls, ~225k tokens, $0.028,
+  19 s, egress only to `api.anthropic.com`, no gateway shims triggered, all 200s).
+- **tiktoken downloads its tables at run time.** camel's default token counter calls
+  `tiktoken.get_encoding("o200k_base")`, which fetches from
+  `openaipublic.blob.core.windows.net`. The egress proxy blocks it, and MiroFish's simulation
+  scripts use that default, so a locked-down run fails when the model is created. Fix before
+  the live run: bake the `o200k_base`/`cl100k_base` files into the image and set
+  `TIKTOKEN_CACHE_DIR` (preferred; this sandbox cannot reach that host, so it needs a build
+  elsewhere), or allow-list the host. The demo used an approximate token counter instead.
 - **Recommender model downloads.** The reddit recommender needs no model. The twitter one loads
   `paraphrase-MiniLM-L6-v2` from HuggingFace at run time, which the egress allow-list blocks.
   Before running twitter: bake the model into the image (preferred) or allow-list the hub.
