@@ -35,6 +35,21 @@
   checked in CI or on a machine that can reach the index.
 - Docker Hub rate-limited the sandbox; `REGISTRY_PREFIX` lets builds use a mirror.
 
+## Live run attempts (`make live-run`, 2026-10-22)
+Harness: `infra/compose/phase0-live-run.sh`. Engine and an LLM compatibility shim
+(`infra/compose/llm_compat.py`) sit on an `--internal` network. The only way out is an
+allowlisting CONNECT proxy (`infra/compose/egress_proxy.py`) that logs every attempt.
+The shim holds the LLM key, so the engine only sees a placeholder.
+
+| Attempt | Route | Result |
+|---|---|---|
+| 1 | Anthropic OpenAI-compatible endpoint, `claude-haiku-5-5` | Ontology call rejected (400). The endpoint refuses `temperature` ("deprecated for this model") and `response_format: json_object` (only strict `json_schema`). MiroFish sends both on every call. |
+| 2 | Same, through the shim (drops `temperature` and `json_object`) | Ontology generated (1 call, 2.8k prompt + 3.3k completion tokens). Graph build then failed: Zep Cloud answered **401 unauthorized** to the configured key, from the engine and from the host alike. |
+
+The egress log shows the engine reached only `api.anthropic.com` (through the shim) and
+`api.getzep.com`. Nothing was denied. This supports A5, but graph build onward is still unexercised.
+**Blocked on a valid Zep Cloud key** (dev project).
+
 ## Assumption register status
 | ID | Status | Evidence / next step |
 |---|---|---|
