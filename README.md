@@ -19,6 +19,12 @@ Oct 20 2026). Section references below (§N) point into it.
 | 3 | `packages/engine_adapter` (+ minimal `packages/net`) | Done |
 | 4–13 | Gateway, seed builder, personas, worker, analysis, reporting, API, portal, test suites, ops | Not started |
 
+## Client portal
+
+The Coreset client portal and AI connector (`app.coresetdata.com`) live in
+[`apps/client-portal`](apps/client-portal/README.md). It is a separate Next.js + Supabase app and
+shares no code with the engine.
+
 ## Layout
 
 As in §2.7. Python packages use an `mre_` module prefix (`mre_core`, `mre_net`, …)

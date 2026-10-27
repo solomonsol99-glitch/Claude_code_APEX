@@ -40,6 +40,37 @@ jobs:
       - name: Dependency audit
         run: uvx pip-audit --strict --progress-spinner off -r <(uv export --frozen --no-dev --no-hashes --all-packages --no-emit-workspace)
 
+  client-portal:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: apps/client-portal
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: ci-only-password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-retries 20
+    env:
+      DATABASE_URL: postgres://postgres:ci-only-password@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/client-portal/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - name: Tests (RLS isolation, allowance, under-100 rule, audit)
+        run: npm test
+      - run: npm run build
+      - run: npm audit --omit=dev --audit-level=high
+
   secrets:
     runs-on: ubuntu-24.04
     steps:
